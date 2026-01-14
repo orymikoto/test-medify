@@ -9,14 +9,207 @@
     var data_per_fetch = 500;
     var data_fetched = 0;
     var currentDeleteId = null;
+    var allKategoris = [];
 
     $(document).ready(function() {
         $('#table').DataTable({
             searching: false,
             order: [[0, 'desc']],
         });
+        loadKategorisForFilter();
+        loadKategoris();
         getData()
     });
+
+    // Load all kategoris for the filter dropdown
+    function loadKategorisForFilter() {
+        $.ajax({
+            url: '/api/kategoris',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.status == 200) {
+                    var select = $('#filter-kategori');
+                    response.data.forEach(function(kategori) {
+                        select.append('<option value="' + kategori.id + '">' + kategori.kode + ' - ' + kategori.nama + '</option>');
+                    });
+                }
+            },
+            error: function() {
+                console.error('Failed to load kategoris for filter');
+            }
+        });
+    }
+
+    // Load all kategoris for the update modal
+    function loadKategoris() {
+        $.ajax({
+            url: '/api/kategoris',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                if (response.status == 200) {
+                    allKategoris = response.data;
+                    populateKategorisSelect();
+                }
+            },
+            error: function() {
+                console.error('Failed to load kategoris');
+            }
+        });
+    }
+
+    // Populate kategoris dropdown in update modal
+    function populateKategorisSelect() {
+        var dropdown = $('#update-kategori-dropdown');
+        dropdown.empty();
+        allKategoris.forEach(function(kategori) {
+            var option = $('<div class="kategori-option" data-id="' + kategori.id + '" data-kode="' + kategori.kode + '" data-nama="' + kategori.nama + '">' +
+                '<strong>' + kategori.kode + '</strong> - ' + kategori.nama + '</div>');
+            dropdown.append(option);
+        });
+        initUpdateKategoriSelector();
+    }
+
+    // Initialize kategori selector for update modal
+    var updateSelectedKategoris = []; // Store selected kategoris outside function scope
+    
+    function initUpdateKategoriSelector() {
+        const searchInput = $('#update-kategori-search');
+        const dropdown = $('#update-kategori-dropdown');
+        const dropdownToggle = $('#update-kategori-dropdown-toggle');
+        const selectedContainer = $('#update-selected-kategoris');
+        const options = dropdown.find('.kategori-option');
+        
+        // Toggle dropdown
+        function toggleDropdown() {
+            if (dropdown.is(':hidden')) {
+                dropdown.show();
+                filterUpdateOptions();
+            } else {
+                dropdown.hide();
+            }
+        }
+        
+        dropdownToggle.off('click').on('click', function(e) {
+            e.preventDefault();
+            toggleDropdown();
+        });
+        
+        searchInput.off('click').on('click', function() {
+            if (dropdown.is(':hidden')) {
+                toggleDropdown();
+            }
+        });
+        
+        // Filter options based on search
+        function filterUpdateOptions() {
+            const searchTerm = searchInput.val().toLowerCase();
+            options.each(function() {
+                const option = $(this);
+                const text = option.text().toLowerCase();
+                const isSelected = updateSelectedKategoris.includes(parseInt(option.data('id')));
+                
+                if (text.includes(searchTerm) && !isSelected) {
+                    option.show();
+                } else {
+                    option.hide();
+                }
+            });
+        }
+        
+        searchInput.off('input').on('input', filterUpdateOptions);
+        
+        // Add kategori
+        function addKategori(id, kode, nama) {
+            id = parseInt(id);
+            if (updateSelectedKategoris.includes(id)) {
+                return;
+            }
+            
+            updateSelectedKategoris.push(id);
+            
+            // Create badge
+            const badge = $('<span class="badge bg-primary kategori-badge" data-id="' + id + '">' +
+                kode + ' - ' + nama +
+                '<button type="button" class="btn-close btn-close-white ms-2" aria-label="Remove"></button>' +
+                '</span>');
+            
+            // Add remove functionality - use event delegation for better reliability
+            badge.find('.btn-close').on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                removeKategori(id);
+            });
+            
+            selectedContainer.append(badge);
+            
+            // Clear search and hide dropdown
+            searchInput.val('');
+            dropdown.hide();
+        }
+        
+        // Remove kategori
+        function removeKategori(id) {
+            id = parseInt(id);
+            // Remove from array
+            updateSelectedKategoris = updateSelectedKategoris.filter(function(katId) {
+                return katId !== id;
+            });
+            
+            // Remove badge from DOM
+            selectedContainer.find('.kategori-badge[data-id="' + id + '"]').remove();
+        }
+        
+        // Use event delegation for existing badges
+        selectedContainer.off('click', '.btn-close').on('click', '.btn-close', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const badge = $(this).closest('.kategori-badge');
+            const id = parseInt(badge.data('id'));
+            removeKategori(id);
+        });
+        
+        // Add click handler to options
+        options.off('click').on('click', function() {
+            const option = $(this);
+            const id = parseInt(option.data('id'));
+            const kode = option.data('kode');
+            const nama = option.data('nama');
+            addKategori(id, kode, nama);
+        });
+        
+        // Close dropdown when clicking outside
+        $(document).off('click.updateKategori').on('click.updateKategori', function(e) {
+            if (!$(e.target).closest('.kategori-selector-container').length) {
+                dropdown.hide();
+            }
+        });
+        
+        // Store selected kategoris getter
+        window.getUpdateSelectedKategoris = function() {
+            return updateSelectedKategoris.slice(); // Return a copy
+        };
+        
+        // Clear selected kategoris
+        window.clearUpdateSelectedKategoris = function() {
+            updateSelectedKategoris = [];
+            selectedContainer.empty();
+        };
+        
+        // Set selected kategoris
+        window.setUpdateSelectedKategoris = function(kategoris) {
+            clearUpdateSelectedKategoris();
+            if (Array.isArray(kategoris) && kategoris.length > 0) {
+                kategoris.forEach(function(kategoriId) {
+                    const kategori = allKategoris.find(function(k) { return k.id == kategoriId; });
+                    if (kategori) {
+                        addKategori(kategori.id, kategori.kode, kategori.nama);
+                    }
+                });
+            }
+        };
+    }
 
     $('.btn-get-data').click(function() {
         getData()
@@ -28,6 +221,7 @@
         var dataTableObj = $('#table').DataTable();
         var filter_kode = $('#filter-kode').val()
         var filter_nama = $('#filter-nama').val()
+        var filter_kategori = $('#filter-kategori').val()
         var filter_harga_min = $('#filter-harga-min').val()
         var filter_harga_max = $('#filter-harga-max').val()
         dataTableObj.clear().draw();
@@ -37,7 +231,7 @@
             dataType: 'json',
             tryCount: 0,
             retryLimit: 3,
-            data: 'kode=' + filter_kode + '&nama=' + filter_nama + '&hargamin=' + filter_harga_min + '&hargamax=' + filter_harga_max,
+            data: 'kode=' + filter_kode + '&nama=' + filter_nama + '&kategori=' + filter_kategori + '&hargamin=' + filter_harga_min + '&hargamax=' + filter_harga_max,
             success: function(results) {
                 var data = results.data
 
@@ -55,18 +249,30 @@
                         pictureHtml = '<img src="' + pictureUrl + '" alt="Picture" style="max-width: 50px; max-height: 50px; object-fit: cover;" class="img-thumbnail">';
                     }
 
+                    // Create kategoris display
+                    var kategorisHtml = '<span class="text-muted">-</span>';
+                    if (item.kategoris_detail && item.kategoris_detail.length > 0) {
+                        kategorisHtml = '';
+                        item.kategoris_detail.forEach(function(kat, idx) {
+                            if (idx > 0) kategorisHtml += ', ';
+                            kategorisHtml += '<span class="badge bg-secondary">' + kat.kode + ' - ' + kat.nama + '</span>';
+                        });
+                    }
+
                     // Create action buttons with icons
+                    var kategorisJson = item.kategoris ? JSON.stringify(item.kategoris) : '[]';
                     var html = `<div class="btn-group" role="group">`;
                     html += `<a href="{{url('master-items/view/')}}/` + kode + `" class="btn btn-sm btn-primary" title="View"><i class="bi bi-eye"></i></a>`;
-                    html += `<button class="btn btn-sm btn-warning btn-update" data-id="` + id + `" data-kode="` + item.kode + `" data-nama="` + item.nama + `" data-harga-beli="` + item.harga_beli + `" data-laba="` + item.laba + `" data-supplier="` + item.supplier + `" data-jenis="` + item.jenis + `" data-picture="` + (item.picture || '') + `" title="Update"><i class="bi bi-pencil"></i></button>`;
+                    html += `<button class="btn btn-sm btn-warning btn-update" data-id="` + id + `" data-kode="` + item.kode + `" data-nama="` + item.nama + `" data-harga-beli="` + item.harga_beli + `" data-laba="` + item.laba + `" data-supplier="` + item.supplier + `" data-jenis="` + item.jenis + `" data-picture="` + (item.picture || '') + `" data-kategoris='` + kategorisJson + `' title="Update"><i class="bi bi-pencil"></i></button>`;
                     html += `<button class="btn btn-sm btn-danger btn-delete" data-id="` + id + `" data-kode="` + item.kode + `" data-nama="` + item.nama + `" title="Delete"><i class="bi bi-trash"></i></button>`;
                     html += `</div>`;
 
-                    // Push data in the correct column order: Picture, Kode, Nama, Jenis, Harga Beli, Harga Jual, Supplier, Actions
+                    // Push data in the correct column order: Picture, Kode, Nama, Jenis, Kategoris, Harga Beli, Harga Jual, Supplier, Actions
                     array_temp.push(pictureHtml);      // Picture
                     array_temp.push(item.kode);        // Kode
                     array_temp.push(item.nama);        // Nama
                     array_temp.push(item.jenis);       // Jenis
+                    array_temp.push(kategorisHtml);    // Kategoris
                     array_temp.push(item.harga_beli);  // Harga Beli
                     array_temp.push(harga_jual);       // Harga Jual (calculated)
                     array_temp.push(item.supplier);    // Supplier
@@ -100,6 +306,7 @@
         var supplier = $(this).data('supplier');
         var jenis = $(this).data('jenis');
         var picture = $(this).data('picture');
+        var kategoris = $(this).data('kategoris') || [];
 
         $('#update-item-id').val(id);
         $('#update-kode').val(kode);
@@ -109,6 +316,11 @@
         $('#update-supplier').val(supplier);
         $('#update-jenis').val(jenis);
         $('#update-picture').val(''); // Reset file input
+
+        // Set selected kategoris
+        if (typeof setUpdateSelectedKategoris === 'function') {
+            setUpdateSelectedKategoris(kategoris);
+        }
 
         // Show/hide picture preview
         if (picture) {
@@ -141,6 +353,21 @@
         if (pictureFile) {
             formData.append('picture', pictureFile);
         }
+
+        // Add selected kategoris
+        var selectedKategoris = [];
+        if (typeof getUpdateSelectedKategoris === 'function') {
+            selectedKategoris = getUpdateSelectedKategoris();
+        }
+        // Always send kategoris array (even if empty) so controller knows to sync relationships
+        if (selectedKategoris && selectedKategoris.length > 0) {
+            selectedKategoris.forEach(function(kategoriId) {
+                if (kategoriId) { // Only add non-empty values
+                    formData.append('kategoris[]', kategoriId);
+                }
+            });
+        }
+        // Note: If empty, controller will still delete all old relationships
 
         if (!formData.get('nama') || !formData.get('harga_beli') || !formData.get('laba') || !formData.get('supplier') || !formData.get('jenis')) {
             alert('Mohon lengkapi semua field');

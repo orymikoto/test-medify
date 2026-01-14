@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\MasterItem;
+use App\Models\Kategori;
+use App\Models\KategoriItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -17,6 +19,7 @@ class MasterItemsController extends Controller
     {
         $kode = $request->kode;
         $nama = $request->nama;
+        $kategori = $request->kategori;
         $hargamin = $request->hargamin;
         $hargamax = $request->hargamax;
 
@@ -26,9 +29,28 @@ class MasterItemsController extends Controller
         if (!empty($nama)) $data_search = $data_search->where('nama', 'LIKE', '%' . $nama . '%');
         if (!empty($hargamin)) $data_search = $data_search->where('harga_beli', '>=', $hargamin);
         if (!empty($hargamax)) $data_search = $data_search->where('harga_beli', '<=', $hargamax);
+        
+        // Filter by kategori
+        if (!empty($kategori)) {
+            $data_search = $data_search->whereHas('kategoris', function($query) use ($kategori) {
+                $query->where('kategoris.id', $kategori);
+            });
+        }
 
         $data_search = $data_search->select('id', 'kode', 'nama', 'jenis', 'harga_beli', 'laba', 'supplier', 'picture')->orderBy('id')->get();
 
+        // Load kategoris for each item with full details
+        foreach ($data_search as $item) {
+            $kategoris = $item->kategoris()->get(['kategoris.id', 'kategoris.kode', 'kategoris.nama']);
+            $item->kategoris = $kategoris->pluck('id')->toArray();
+            $item->kategoris_detail = $kategoris->map(function($k) {
+                return [
+                    'id' => $k->id,
+                    'kode' => $k->kode,
+                    'nama' => $k->nama
+                ];
+            })->toArray();
+        }
 
         return json_encode([
             'status' => 200,
@@ -40,17 +62,21 @@ class MasterItemsController extends Controller
     {
         if ($method == 'new') {
             $item = [];
+            $selectedKategoris = [];
         } else {
             $item = MasterItem::find($id);
+            $selectedKategoris = $item->kategoris()->pluck('kategoris.id')->toArray();
         }
         $data['item'] = $item;
         $data['method'] = $method;
+        $data['kategoris'] = Kategori::orderBy('nama')->get();
+        $data['selectedKategoris'] = $selectedKategoris;
         return view('master_items.form.index', $data);
     }
 
     public function singleView($kode)
     {
-        $data['data'] = MasterItem::where('kode', $kode)->first();
+        $data['data'] = MasterItem::where('kode', $kode)->with('kategoris')->first();
         return view('master_items.single.index', $data);
     }
 
@@ -88,6 +114,22 @@ class MasterItemsController extends Controller
         }
 
         $data_item->save();
+
+        // Always delete existing relationships first (force delete to permanently remove)
+        KategoriItem::where('master_item_id', $data_item->id)->forceDelete();
+        
+        // Handle kategoris relationships - create new ones if provided
+        if ($request->has('kategoris') && is_array($request->kategoris) && count($request->kategoris) > 0) {
+            // Create new relationships
+            foreach ($request->kategoris as $kategoriId) {
+                if (!empty($kategoriId)) {
+                    KategoriItem::create([
+                        'master_item_id' => $data_item->id,
+                        'kategori_id' => $kategoriId
+                    ]);
+                }
+            }
+        }
 
         return redirect('master-items');
     }
@@ -154,6 +196,25 @@ class MasterItemsController extends Controller
             }
 
             $data_item->save();
+
+            // Always delete existing relationships first (force delete to permanently remove)
+            KategoriItem::where('master_item_id', $data_item->id)->forceDelete();
+            
+            // Handle kategoris relationships - create new ones if provided
+            if ($request->has('kategoris') && is_array($request->kategoris) && count($request->kategoris) > 0) {
+                // Create new relationships
+                foreach ($request->kategoris as $kategoriId) {
+                    if (!empty($kategoriId)) {
+                        KategoriItem::create([
+                            'master_item_id' => $data_item->id,
+                            'kategori_id' => $kategoriId
+                        ]);
+                    }
+                }
+            }
+
+            // Reload kategoris for response
+            $data_item->load('kategoris');
 
             return response()->json([
                 'status' => 200,

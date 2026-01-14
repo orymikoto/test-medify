@@ -22,5 +22,12 @@ class DatabaseSeeder extends Seeder
             'email' => 'medify@example.com',
             'password' => Hash::make("password")
         ]);
+
+        // Seed in order: Kategori -> MasterItem -> KategoriItem (many-to-many)
+        $this->call([
+            KategoriSeeder::class,
+            MasterItemSeeder::class,
+            KategoriItemSeeder::class,
+        ]);
     }
 }

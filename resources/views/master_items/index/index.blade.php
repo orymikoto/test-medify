@@ -70,6 +70,32 @@
                         </select>
                     </div>
                     <div class="form-group mb-3">
+                        <label>Kategoris</label>
+                        <div class="kategori-selector-container">
+                            <!-- Search/Select Input -->
+                            <div class="input-group mb-2">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="update-kategori-search" 
+                                       placeholder="Cari atau pilih kategori..."
+                                       autocomplete="off">
+                                <button class="btn btn-outline-secondary" type="button" id="update-kategori-dropdown-toggle">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Dropdown Menu -->
+                            <div class="kategori-dropdown" id="update-kategori-dropdown" style="display: none;">
+                                <!-- Options will be populated by JavaScript -->
+                            </div>
+                            
+                            <!-- Selected Kategoris Display -->
+                            <div class="selected-kategoris mt-2" id="update-selected-kategoris">
+                                <!-- Selected kategoris will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
                         <label>Picture</label>
                         <input type="file" class="form-control" id="update-picture" name="picture" accept="image/*">
                         <div id="update-picture-preview" class="mt-2" style="display: none;">
@@ -107,6 +133,82 @@
         </div>
     </div>
 </div>
+
+<style>
+    .kategori-selector-container {
+        position: relative;
+    }
+    
+    .kategori-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        max-height: 250px;
+        overflow-y: auto;
+        z-index: 1050;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        margin-top: 2px;
+    }
+    
+    .kategori-option {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s;
+    }
+    
+    .kategori-option:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .kategori-option:last-child {
+        border-bottom: none;
+    }
+    
+    .kategori-option.selected {
+        background-color: #e7f3ff;
+        color: #0d6efd;
+    }
+    
+    .selected-kategoris {
+        min-height: 40px;
+        padding: 0.5rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        background-color: #f8f9fa;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .kategori-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .kategori-badge .btn-close {
+        font-size: 0.75rem;
+        margin-left: 0.5rem;
+        opacity: 0.8;
+    }
+    
+    .kategori-badge .btn-close:hover {
+        opacity: 1;
+    }
+    
+    #update-kategori-search:focus,
+    #kategori-search:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
 
 @endsection
 @section('js')

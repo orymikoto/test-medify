@@ -21,3 +21,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::put('/master-items/{id}', [App\Http\Controllers\MasterItemsController::class, 'update']);
 Route::post('/master-items/{id}', [App\Http\Controllers\MasterItemsController::class, 'update']); // For file uploads
 Route::delete('/master-items/{id}', [App\Http\Controllers\MasterItemsController::class, 'deleteApi']);
+
+// Kategoris API Routes
+Route::put('/kategoris/{id}', [App\Http\Controllers\KategoriController::class, 'update']);
+Route::delete('/kategoris/{id}', [App\Http\Controllers\KategoriController::class, 'deleteApi']);
+Route::get('/kategoris', [App\Http\Controllers\KategoriController::class, 'getAll']);

@@ -6,43 +6,28 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class MasterItem extends Model
+class Kategori extends Model
 {
     use HasFactory;
     use SoftDeletes;
 
     protected $fillable = [
-        'kode',
         'nama',
-        'harga_beli',
-        'laba',
-        'supplier',
-        'jenis',
-        'picture'
+        'kode'
     ];
 
-    /**
-     * Get the picture URL
-     */
-    public function getPictureUrlAttribute()
-    {
-        if ($this->picture) {
-            return asset('storage/' . $this->picture);
-        }
-        return null;
-    }
     public function kategoriItems()
     {
         return $this->hasMany(KategoriItem::class)->whereNull('deleted_at');
     }
 
     /**
-     * Many-to-many relationship with Kategori through KategoriItem
+     * Many-to-many relationship with MasterItem through KategoriItem
      * Only includes non-deleted kategori_items
      */
-    public function kategoris()
+    public function masterItems()
     {
-        return $this->belongsToMany(Kategori::class, 'kategori_items', 'master_item_id', 'kategori_id')
+        return $this->belongsToMany(MasterItem::class, 'kategori_items', 'kategori_id', 'master_item_id')
             ->wherePivotNull('deleted_at')
             ->withTimestamps()
             ->withPivot('id', 'deleted_at');

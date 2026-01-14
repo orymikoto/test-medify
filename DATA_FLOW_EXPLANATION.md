@@ -388,3 +388,5 @@ getData() → Fetches fresh data, deleted item is gone
 
 The "loop" you're looking for is in **JavaScript**, not Blade! 🎯
 
+
+

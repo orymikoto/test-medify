@@ -31,3 +31,12 @@ Route::get('/master-items/delete/{id}', [App\Http\Controllers\MasterItemsControl
 
 
 Route::get('/master-items/update-random-data', [App\Http\Controllers\MasterItemsController::class, 'updateRandomData']);
+
+// Kategoris Routes
+Route::get('/kategoris', [App\Http\Controllers\KategoriController::class, 'index']);
+Route::get('/kategoris/search', [App\Http\Controllers\KategoriController::class, 'search']);
+Route::get('/kategoris/form/{method}/{id?}', [App\Http\Controllers\KategoriController::class, 'formView']);
+Route::post('/kategoris/form/{method}/{id?}', [App\Http\Controllers\KategoriController::class, 'formSubmit']);
+
+Route::get('/kategoris/view/{kode}', [App\Http\Controllers\KategoriController::class, 'singleView']);
+Route::get('/kategoris/delete/{id}', [App\Http\Controllers\KategoriController::class, 'delete']);

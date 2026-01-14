@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MasterItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class MasterItemsController extends Controller
 {
@@ -23,9 +24,10 @@ class MasterItemsController extends Controller
 
         if (!empty($kode)) $data_search = $data_search->where('kode', $kode);
         if (!empty($nama)) $data_search = $data_search->where('nama', 'LIKE', '%' . $nama . '%');
-        if (!empty($hargamin)) $data_search = $data_search->where('harga_beli', '>=', $hargamin)->where('harga_beli', '<=', $hargamax);
+        if (!empty($hargamin)) $data_search = $data_search->where('harga_beli', '>=', $hargamin);
+        if (!empty($hargamax)) $data_search = $data_search->where('harga_beli', '<=', $hargamax);
 
-        $data_search = $data_search->select('kode', 'nama', 'jenis', 'harga_beli', 'laba', 'supplier')->orderBy('id')->get();
+        $data_search = $data_search->select('id', 'kode', 'nama', 'jenis', 'harga_beli', 'laba', 'supplier', 'picture')->orderBy('id')->get();
 
 
         return json_encode([
@@ -71,6 +73,20 @@ class MasterItemsController extends Controller
         $data_item->kode = $kode;
         $data_item->supplier = $request->supplier;
         $data_item->jenis = $request->jenis;
+
+        // Handle picture upload
+        if ($request->hasFile('picture')) {
+            // Delete old picture if exists
+            if ($data_item->picture && Storage::disk('public')->exists($data_item->picture)) {
+                Storage::disk('public')->delete($data_item->picture);
+            }
+
+            $picture = $request->file('picture');
+            $pictureName = 'master_items/' . time() . '_' . $picture->getClientOriginalName();
+            $picture->storeAs('public', $pictureName);
+            $data_item->picture = $pictureName;
+        }
+
         $data_item->save();
 
         return redirect('master-items');
@@ -111,5 +127,62 @@ class MasterItemsController extends Controller
         $array = ['Obat','Alkes','Matkes','Umum','ATK'];
         $random = rand(0,4);
         return $array[$random];
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $data_item = MasterItem::findOrFail($id);
+            
+            $data_item->nama = $request->nama;
+            $data_item->harga_beli = $request->harga_beli;
+            $data_item->laba = $request->laba;
+            $data_item->supplier = $request->supplier;
+            $data_item->jenis = $request->jenis;
+
+            // Handle picture upload
+            if ($request->hasFile('picture')) {
+                // Delete old picture if exists
+                if ($data_item->picture && Storage::disk('public')->exists($data_item->picture)) {
+                    Storage::disk('public')->delete($data_item->picture);
+                }
+
+                $picture = $request->file('picture');
+                $pictureName = 'master_items/' . time() . '_' . $picture->getClientOriginalName();
+                $picture->storeAs('public', $pictureName);
+                $data_item->picture = $pictureName;
+            }
+
+            $data_item->save();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Item berhasil diupdate',
+                'data' => $data_item
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Gagal mengupdate item: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteApi($id)
+    {
+        try {
+            $item = MasterItem::findOrFail($id);
+            $item->delete();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Item berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 500,
+                'message' => 'Gagal menghapus item: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

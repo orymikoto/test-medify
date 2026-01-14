@@ -3,13 +3,14 @@
 <table id="table" class="table table-striped" style="width:100%">
     <thead>
         <tr>
+            <th>Picture</th>
             <th>Kode</th>
             <th>Nama</th>
             <th>Jenis</th>
             <th>Harga Beli</th>
             <th>Harga Jual</th>
             <th>Supplier</th>
-            <th>View</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>

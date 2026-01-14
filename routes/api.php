@@ -17,3 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::put('/master-items/{id}', [App\Http\Controllers\MasterItemsController::class, 'update']);
+Route::post('/master-items/{id}', [App\Http\Controllers\MasterItemsController::class, 'update']); // For file uploads
+Route::delete('/master-items/{id}', [App\Http\Controllers\MasterItemsController::class, 'deleteApi']);

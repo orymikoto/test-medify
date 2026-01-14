@@ -10,4 +10,25 @@ class MasterItem extends Model
 {
     use HasFactory;
     use SoftDeletes;
+
+    protected $fillable = [
+        'kode',
+        'nama',
+        'harga_beli',
+        'laba',
+        'supplier',
+        'jenis',
+        'picture'
+    ];
+
+    /**
+     * Get the picture URL
+     */
+    public function getPictureUrlAttribute()
+    {
+        if ($this->picture) {
+            return asset('storage/' . $this->picture);
+        }
+        return null;
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Kategori;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class KategoriController extends Controller
 {
@@ -152,5 +153,25 @@ class KategoriController extends Controller
                 'message' => 'Gagal menghapus kategori: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function downloadPdf($kode)
+    {
+        $kategori = Kategori::where('kode', $kode)->with('masterItems')->first();
+        
+        if (!$kategori) {
+            abort(404, 'Kategori tidak ditemukan');
+        }
+
+        $data = [
+            'kategori' => $kategori,
+            'masterItems' => $kategori->masterItems,
+            'tanggalCetak' => now()->format('d/m/Y H:i:s')
+        ];
+
+        $pdf = Pdf::loadView('kategoris.pdf.index', $data);
+        $pdf->setPaper('a4', 'portrait');
+        
+        return $pdf->download('Kategori_' . $kategori->kode . '_' . date('YmdHis') . '.pdf');
     }
 }

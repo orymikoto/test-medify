@@ -7,6 +7,8 @@ use App\Models\Kategori;
 use App\Models\KategoriItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Exports\MasterItemsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MasterItemsController extends Controller
 {
@@ -245,5 +247,20 @@ class MasterItemsController extends Controller
                 'message' => 'Gagal menghapus item: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function downloadExcel(Request $request)
+    {
+        $filters = [
+            'kode' => $request->get('kode'),
+            'nama' => $request->get('nama'),
+            'kategori' => $request->get('kategori'),
+            'hargamin' => $request->get('hargamin'),
+            'hargamax' => $request->get('hargamax'),
+        ];
+
+        $filename = 'Data Items ' . date('Y-m-d') . '.xlsx';
+        
+        return Excel::download(new MasterItemsExport($filters), $filename);
     }
 }

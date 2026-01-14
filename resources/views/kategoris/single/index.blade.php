@@ -28,6 +28,9 @@
                     <div class="mt-3">
                         <a class="btn btn-info" href="{{url('kategoris/form/edit')}}/{{$data->id}}">Edit</a>
                         <a class="btn btn-danger" href="{{url('kategoris/delete')}}/{{$data->id}}" onclick="return confirm('Are you sure you want to delete this kategori?');">Delete</a>
+                        <a class="btn btn-success" href="{{url('kategoris/pdf')}}/{{$data->kode}}" target="_blank">
+                            <i class="bi bi-file-pdf"></i> Download PDF
+                        </a>
                     </div>
                 </div>
             </div>

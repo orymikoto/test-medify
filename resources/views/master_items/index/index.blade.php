@@ -4,12 +4,19 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="form-group mb-2">
-                <a href="{{url('master-items/form/new')}}" class="btn btn-secondary">+ Master Items Baru</a>
-            </div>
+        <div class="col-md-12">
             <div class="card">
-                <div class="card-header">Daftar Master Items</div>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Daftar Master Items</h5>
+                    <div class="btn-group">
+                        <a href="{{url('master-items/form/new')}}" class="btn btn-secondary">
+                            <i class="bi bi-plus-circle"></i> Master Items Baru
+                        </a>
+                        <button type="button" class="btn btn-success" id="btn-download-excel">
+                            <i class="bi bi-file-earmark-excel"></i> Download Excel
+                        </button>
+                    </div>
+                </div>
 
                 <div class="card-body">
                     @include('master_items.index.filter')
@@ -207,6 +214,16 @@
     #kategori-search:focus {
         border-color: #86b7fe;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .spin {
+        animation: spin 1s linear infinite;
+        display: inline-block;
     }
 </style>
 

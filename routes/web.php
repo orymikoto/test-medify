@@ -28,6 +28,7 @@ Route::post('/master-items/form/{method}/{id?}', [App\Http\Controllers\MasterIte
 
 Route::get('/master-items/view/{kode}', [App\Http\Controllers\MasterItemsController::class, 'singleView']);
 Route::get('/master-items/delete/{id}', [App\Http\Controllers\MasterItemsController::class, 'delete']);
+Route::get('/master-items/download-excel', [App\Http\Controllers\MasterItemsController::class, 'downloadExcel']);
 
 
 Route::get('/master-items/update-random-data', [App\Http\Controllers\MasterItemsController::class, 'updateRandomData']);
@@ -40,3 +41,4 @@ Route::post('/kategoris/form/{method}/{id?}', [App\Http\Controllers\KategoriCont
 
 Route::get('/kategoris/view/{kode}', [App\Http\Controllers\KategoriController::class, 'singleView']);
 Route::get('/kategoris/delete/{id}', [App\Http\Controllers\KategoriController::class, 'delete']);
+Route::get('/kategoris/pdf/{kode}', [App\Http\Controllers\KategoriController::class, 'downloadPdf']);

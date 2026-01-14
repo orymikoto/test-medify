@@ -446,4 +446,27 @@
             }
         });
     });
+
+    // Download Excel with current filters
+    $('#btn-download-excel').click(function() {
+        var filter_kode = $('#filter-kode').val();
+        var filter_nama = $('#filter-nama').val();
+        var filter_kategori = $('#filter-kategori').val();
+        var filter_harga_min = $('#filter-harga-min').val();
+        var filter_harga_max = $('#filter-harga-max').val();
+        
+        // Build query string
+        var params = [];
+        if (filter_kode) params.push('kode=' + encodeURIComponent(filter_kode));
+        if (filter_nama) params.push('nama=' + encodeURIComponent(filter_nama));
+        if (filter_kategori) params.push('kategori=' + encodeURIComponent(filter_kategori));
+        if (filter_harga_min) params.push('hargamin=' + encodeURIComponent(filter_harga_min));
+        if (filter_harga_max) params.push('hargamax=' + encodeURIComponent(filter_harga_max));
+        
+        var queryString = params.length > 0 ? '?' + params.join('&') : '';
+        var url = '{{url("master-items/download-excel")}}' + queryString;
+        
+        // Open download in new window
+        window.location.href = url;
+    });
 </script>
